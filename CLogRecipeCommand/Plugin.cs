@@ -11,30 +11,18 @@ namespace CLogRecipeCommand
 {
     public sealed class Plugin : IDalamudPlugin
     {
+        [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+        [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
+        [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
+        [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
+        [PluginService] internal static IPluginLog PluginLog { get; private set; } = null!;
+
         public string Name => "Crafting Log Recipe Command";
         private const string CommandName = "/clogrecipe";
-
-        private DalamudPluginInterface PluginInterface { get; init; }
-        private ICommandManager CommandManager { get; init; }
-        private IDataManager DataManager { get; set; }
-        private IChatGui ChatGui { get; set; }
-        private IPluginLog PluginLog { get; init; }
-
         private Dictionary<string, uint> itemNameToRecipeId = new();
 
-        public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] ICommandManager commandManager,
-            [RequiredVersion("1.0")] IDataManager dataManager,
-            [RequiredVersion("1.0")] IChatGui chatGui,
-            [RequiredVersion("1.0")] IPluginLog pluginLog)
+        public Plugin()
         {
-            this.PluginInterface = pluginInterface;
-            this.CommandManager = commandManager;
-            this.DataManager = dataManager;
-            this.ChatGui = chatGui;
-            this.PluginLog = pluginLog;
-
             var recipes = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Recipe>()?.ToList() ?? [];
             foreach (var recipe in recipes) {
                 var recipeId = recipe.RowId;
@@ -46,12 +34,12 @@ namespace CLogRecipeCommand
                 }
             }
 
-            this.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand));
+            CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand));
         }
 
         public void Dispose()
         {
-            this.CommandManager.RemoveHandler(CommandName);
+            CommandManager.RemoveHandler(CommandName);
         }
 
         private unsafe void OnCommand(string command, string args)
